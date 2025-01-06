@@ -29,12 +29,18 @@ try {
     await client.connect();
  
 
+    // db te pathano
+
+    const reviewCollection = client.db('reviewDB').collection('review');
+
     // post korbo
 
     app.post('/review',async(req, res)=>{
       const newReview = req.body;
       console.log(newReview);
-    
+
+      const result = await reviewCollection.insertOne(newReview);
+      res.send(result);
     })
     
 
