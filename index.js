@@ -32,6 +32,7 @@ try {
     // db te pathano
 
     const reviewCollection = client.db('reviewDB').collection('review');
+    const watchlistCollection = client.db('reviewDB').collection('watchlist');
 
     // view all review->Read operation
 
@@ -42,22 +43,22 @@ try {
       res.send(result)
     })
 
-//  new
+//  view details
 app.get("/review/:id", async (req, res) => {
   try {
     const id = req.params.id;
+console.log("id",id)
+  
+    const query = {_id: new ObjectId(id)};
 
-    // Convert id to ObjectId
-    const query = { _id: new ObjectId(id) };
-
-    // Fetch the review
+    
     const review = await reviewCollection.findOne(query);
 
     if (review) {
-      res.send(review);
-    } else {
-      res.status(404).send({ message: "Review not found" });
-    }
+      return res.send(review);
+    } 
+  res.status(404).send({ message: "Review not found" });
+  
   } catch (error) {
     console.error(error);
     res.status(500).send({ message: "Internal Server Error" });
@@ -74,6 +75,35 @@ app.get("/review/:id", async (req, res) => {
       const result = await reviewCollection.insertOne(newReview);
       res.send(result);
     })
+
+
+      // Add to WatchList
+      app.post('/watchlist', async (req, res) => {
+        try {
+          const { gameTitle, coverImage, genre, rating, reviewDescription,  addedBy } = req.body;
+  
+          if (!gameTitle || !coverImage || !genre || !rating || !reviewDescription || !addedBy) {
+            return res.status(400).send({ message: "Missing required fields" });
+          }
+  
+          const watchlistItem = {
+            gameTitle,
+            coverImage,
+            genre,
+            rating,
+            reviewDescription,
+            
+            addedBy, 
+            addedAt: new Date()
+          };
+  
+          const result = await watchlistCollection.insertOne(watchlistItem);
+          res.status(201).send({ success: true, data: result, message: "Added to WatchList" });
+        } catch (error) {
+          console.error("Error adding to watchlist:", error);
+          res.status(500).send({ message: "Internal Server Error" });
+        }
+      });
     
 
         // Send a ping to confirm a successful connection
