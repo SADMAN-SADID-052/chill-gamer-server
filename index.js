@@ -33,6 +33,38 @@ try {
 
     const reviewCollection = client.db('reviewDB').collection('review');
 
+    // view all review->Read operation
+
+    app.get('/review',async(req,res) => {
+
+      const cursor = reviewCollection.find();
+      const result = await cursor.toArray();
+      res.send(result)
+    })
+
+//  new
+app.get("/review/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    // Convert id to ObjectId
+    const query = { _id: new ObjectId(id) };
+
+    // Fetch the review
+    const review = await reviewCollection.findOne(query);
+
+    if (review) {
+      res.send(review);
+    } else {
+      res.status(404).send({ message: "Review not found" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Internal Server Error" });
+  }
+});
+
+
     // post korbo
 
     app.post('/review',async(req, res)=>{
