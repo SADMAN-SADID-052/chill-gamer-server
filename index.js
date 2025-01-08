@@ -77,10 +77,43 @@ console.log("id",id)
     })
 
 
+//  My Reviews
+  app.get('/review', async (req, res) => {
+    try {
+      const userEmail = req.query.email; 
+      if (!userEmail) {
+        return res.status(400).send({ message: "User email is required" });
+      }
+
+      const userReviews = await reviewCollection.find({ "email": userEmail }).toArray();
+      res.send(userReviews);
+    } catch (error) {
+      console.log("Error fetching user reviews:", error);
+      res.status(500).send({ message: "Internal Server Error" });
+    }
+  });
+
+
+    // Delete a review
+    app.delete('/review/:id', async (req, res) => {
+      try {
+        const id = req.params.id;
+
+        const result = await reviewCollection.deleteOne({ _id: new ObjectId(id) });
+        if (result.deletedCount > 0) {
+          return res.status(200).send({ success: true, message: "Review deleted successfully" });
+        }
+        res.status(404).send({ message: "Review not found" });
+      } catch (error) {
+        console.log("Error deleting review:", error);
+        res.status(500).send({ message: "Internal Server Error" });
+      }
+    });
+
       // Add to WatchList
       app.post('/watchlist', async (req, res) => {
         try {
-          const { gameTitle, coverImage, genre, rating, reviewDescription,  addedBy } = req.body;
+          const { gameTitle, coverImage, genre, rating,publishingYear, reviewDescription,  addedBy } = req.body;
   
           if (!gameTitle || !coverImage || !genre || !rating || !reviewDescription || !addedBy) {
             return res.status(400).send({ message: "Missing required fields" });
@@ -91,6 +124,7 @@ console.log("id",id)
             coverImage,
             genre,
             rating,
+            publishingYear,
             reviewDescription,
             
             addedBy, 
@@ -101,6 +135,24 @@ console.log("id",id)
           res.status(201).send({ success: true, data: result, message: "Added to WatchList" });
         } catch (error) {
           console.error("Error adding to watchlist:", error);
+          res.status(500).send({ message: "Internal Server Error" });
+        }
+      });
+
+      // get watchlist
+
+      app.get('/watchlist', async (req, res) => {
+        try {
+          const userEmail = req.query.email; // Email of the logged-in user
+          if (!userEmail) {
+            return res.status(400).send({ message: "User email is required" });
+          }
+      
+          // Find watchlist items where addedBy.email matches the user's email
+          const watchlistItems = await watchlistCollection.find({ "addedBy.email": userEmail }).toArray();
+          res.status(200).send({ success: true, data: watchlistItems });
+        } catch (error) {
+          console.error("Error fetching watchlist:", error);
           res.status(500).send({ message: "Internal Server Error" });
         }
       });
