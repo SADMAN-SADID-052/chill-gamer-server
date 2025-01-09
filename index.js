@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+require('dotenv').config();
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -10,7 +12,9 @@ app.use(cors());
 app.use(express.json());
 
 // mongodb full code
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+
+
+
 
 const uri = "mongodb://localhost:27017";
 
@@ -66,6 +70,28 @@ console.log("id",id)
 });
 
 
+// Height rated game section
+
+app.get('/highestRatedGames', async (req, res) => {
+  try {
+    console.log('Fetching highest-rated games...');
+
+    const highestRatedGames = await reviewCollection
+    .find({ rating: { $gte: 7 } }) 
+    .sort({ rating: -1 })          
+    .limit(6)                      
+    .toArray();
+
+    console.log('Fetched games:', highestRatedGames); 
+
+    res.json(highestRatedGames);
+  } catch (error) {
+    console.error('Error fetching highest-rated games:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+
     // post korbo
 
     app.post('/review',async(req, res)=>{
@@ -94,7 +120,7 @@ console.log("id",id)
   });
 
 
-    // Delete a review
+    // Delete my review
     app.delete('/review/:id', async (req, res) => {
       try {
         const id = req.params.id;
@@ -109,6 +135,43 @@ console.log("id",id)
         res.status(500).send({ message: "Internal Server Error" });
       }
     });
+
+   
+    // Update my review
+
+app.put('/review/:id', async (req, res) => {
+  const { id } = req.params; // Get the review ID from params
+  const updatedReview = req.body; // Get the updated review data from the request body
+
+  if (!ObjectId.isValid(id)) {
+    return res.status(400).json({ success: false, message: 'Invalid ID' });
+  }
+
+  try {
+    const filter = { _id: new ObjectId(id) };
+    const updateDoc = {
+      $set: {
+        gameTitle: updatedReview.gameTitle,
+        genre: updatedReview.genre,
+        rating: updatedReview.rating,
+        publishingYear: updatedReview.publishingYear,
+        coverImage: updatedReview.coverImage,
+        reviewDescription: updatedReview.reviewDescription,
+      },
+    };
+
+    const result = await reviewCollection.updateOne(filter, updateDoc);
+
+    if (result.modifiedCount === 1) {
+      res.json({ success: true, message: 'Review updated successfully' });
+    } else {
+      res.json({ success: false, message: 'No changes made to the review' });
+    }
+  } catch (error) {
+    console.error('Error updating review:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
 
       // Add to WatchList
       app.post('/watchlist', async (req, res) => {
