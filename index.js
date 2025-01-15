@@ -68,7 +68,7 @@ async function run() {
         console.log("Fetching highest-rated games...");
 
         const highestRatedGames = await reviewCollection
-          .find({ rating: { $gte: 7 } })
+          .find({ rating: { $gte: 10 } })
           .sort({ rating: -1 })
           .limit(6)
           .toArray();
